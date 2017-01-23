@@ -18,9 +18,9 @@ class Lens {
     strokeWeight(1);
     stroke(225);
     noFill();
-    rotateX(90);
+    //rotateX(radians(-90));
     pushMatrix();
-    arc(0, sr-h, 2.0*sr, 2.0*sr, radians(270-degrees(asin(d/(2*sr)))), radians(270+degrees(asin(d/(2*sr)))));
+    arc(0, h-sr, 2.0*sr, 2.0*sr, radians(90-degrees(asin(d/(2*sr)))), radians(90+degrees(asin(d/(2*sr)))));
     popMatrix();
   }
 }
