@@ -8,7 +8,7 @@ XyzVector XyzVector;
 float pitch=10;//入射光ピッチ
 float d=200;//レンズ直径
 float h=50;//レンズ高さ
-float incidenceAngle; 
+float[] incidenceAngle=new float[refractions.length]; 
 
 void setup() {
   cam = new PeasyCam(this, 200);
@@ -23,8 +23,8 @@ void setup() {
   XyzVector=new XyzVector(100);
 
   for (int i=0; i<refractions.length; i++) {
-    incidenceAngle=asin(i*pitch/Lens.sr());
-    refractions[i] = new Refraction(1, 1.49, incidenceAngle);
+    incidenceAngle[i]=asin(i*pitch/Lens.sr());
+    refractions[i] = new Refraction(1, 1.49, incidenceAngle[i]);
   }
 }
 
@@ -41,8 +41,8 @@ void draw() {
     rotateX(radians(90));
     Lens.display();
     pushMatrix();
-    translate(-i*pitch, sqrt(sq(Lens.sr())-sq(i*pitch))-Lens.sr()+h, 0 );
-    //rotateZ(incidenceAngle);
+    translate(i*pitch, sqrt(sq(Lens.sr())-sq(i*pitch))-Lens.sr()+h, 0 );
+    rotateZ(-incidenceAngle[i]);
     refractions[i].display();
     popMatrix();
     popMatrix();
