@@ -26,9 +26,9 @@ class Refraction {
     stroke(225);
     pushMatrix();
     stroke(255,0,0);
-    line(-200*sin(incidenceAngle), 200*cos(incidenceAngle), 0, 0);  //入射光描写
+    line(-200*sin(incidenceAngle), 200*cos(incidenceAngle), 0, 0);  //入射光の描写
     stroke(255,255,0);
-    line(0, 0, 200*sin(refractiveAngle), -200*cos(refractiveAngle));//反射光描写
+    line(0, 0, 300*sin(refractiveAngle), -300*cos(refractiveAngle));//屈折光の描写
 stroke(255,255,255);
     
     ellipse(0, 0, 2, 2);
