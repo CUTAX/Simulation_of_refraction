@@ -1,5 +1,5 @@
 class Lens {
-  float d, h, sr;
+  float d, h, sr,theta;
 
   //初期化用メソッド(コンストラクタ)
   Lens(float _d, float _h) {
@@ -8,9 +8,15 @@ class Lens {
   }
 
   //屈折角を計算するメソッド
+
   float sr() {
     sr=sq(d)/(8.0*h)+h/2.0;
     return sr;
+  }
+
+  float theta() {
+    theta=degrees(acos((sr-h)/sr));
+    return theta;
   }
 
 

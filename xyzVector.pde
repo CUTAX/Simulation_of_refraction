@@ -2,7 +2,7 @@ class XyzVector {
   float l;
 
   //初期化用メソッド(コンストラクタ)
-  XyzVector(int _l) {
+  XyzVector(float _l) {
     l=_l;
   }
 
