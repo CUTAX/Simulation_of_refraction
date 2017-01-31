@@ -12,7 +12,7 @@ float d=200;//レンズ直径
 float h=50;//レンズ高さ
 float sr; //レンズのSR
 float[] incidenceAngle; 
-float theta=30;
+float theta=0;
 
 int numberOfLight;
 float minDisFromCenter[];
@@ -25,6 +25,8 @@ float psi;
 int psiNum;
 float x1[], y1[], x2[], y2[];
 
+PFont font;
+int textSize=20;
 
 void setup() {
   size(displayWidth, displayHeight, P3D);
@@ -53,16 +55,20 @@ void setup() {
     incidenceAngle[i]=asin(i*pitch/sr);
     refractions[i] = new Refraction(1, 1.49, incidenceAngle[i]);
   }
+  
+    font =loadFont("OCRAExtended-48.vlw");
+  textFont(font);
 }
 
 void draw() {
+  pushMatrix();
   background(0);
   //屈折の計算
   for (int i=0; i<refractions.length; i++) {
     refractions[i].calculation();
   }
   //光線中心からのレンズまでの距離を計算
-  psiNum=floor(360/psiPitch);
+  psiNum=floor(360/psiPitch)-1;
 
   Intersection=new IntersectionOfEllipseAndLine[psiNum];
   x1=new float[psiNum];
@@ -85,8 +91,6 @@ void draw() {
     y1[i]=Intersection[i].y1();
     x2[i]=Intersection[i].x2();
     y2[i]=Intersection[i].y2();
-
-
 
     if (psi>=0||psi<180) {  
       if (y1[i]<0||y2[i]<0) {
@@ -151,4 +155,23 @@ void draw() {
   }
   popMatrix();
   popMatrix();
+  
+  popMatrix();  //3D表示終了
+  
+  /*text drawing*/
+    hint(DISABLE_DEPTH_TEST);
+  textSize(textSize);
+  textAlign(LEFT, TOP);
+  fill(255);
+  text("psiNum="+nf(psiNum, 2, 0), 0, (textSize+5)*0);
+  //text("cameraEyeY="+nf(cameraEyeY, 3, 1), 0, (textSize+5)*1);
+  //text("cameraEyeZ="+nf(cameraEyeZ, 3, 1), 0, (textSize+5)*2);
+
+  //text("cameraUpX="+nf(cameraUpX, 1, 2), 0, (textSize+5)*4);
+  //text("cameraUpY="+nf(cameraUpY, 1, 2), 0, (textSize+5)*5);
+  //text("cameraUpZ="+nf(cameraUpZ, 1, 2), 0, (textSize+5)*6);
+  
+  //text("scale="+nf(scale, 1, 2), 0, (textSize+5)*8);
+  
+  hint(ENABLE_DEPTH_TEST);
 }
