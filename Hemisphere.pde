@@ -45,7 +45,6 @@ class Hemisphere {
     //}
 
     noStroke();
-    fill(255, 0, 255, 200);
     for (int i=0; i<thetaDivision; i++) {  
       beginShape(TRIANGLE_STRIP);
       for (int j=0; j<phiDivision+1; j++) {

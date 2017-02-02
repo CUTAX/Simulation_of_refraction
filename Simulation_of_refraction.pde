@@ -12,7 +12,8 @@ float d=200;//レンズ直径
 float h=50;//レンズ高さ
 float sr; //レンズのSR
 float[] incidenceAngle; 
-float theta=0;
+float theta=10;
+float phi=0;
 
 int numberOfLight;
 float minDisFromCenter[];
@@ -128,32 +129,35 @@ void draw() {
 
   //レンズの描写(半球)
   pushMatrix();
-  translate(0, 0, -sr+h);
+  fill(0,100,255,50);
+  //translate(0, 0, -sr+h);
   Hemisphere.display();
   popMatrix();
 
   //光線の描写
   pushMatrix();
   rotateX(radians(90));
-
+  rotateY(radians(0));
   rotateZ(radians(theta));
 
-  pushMatrix();
   for (int j=0; j<psiNum; j++) {
     psi=psiPitch*j;
+  pushMatrix();
+
     rotateY(radians(psi));
 
     for (int i=minNumFromCenter[j]; i<maxNumFromCenter[j]; i++) {
       pushMatrix();
-      translate(i*pitch, sqrt(sq(Lens.sr())-sq(i*pitch))-Lens.sr()+h, 0 );
+      translate(i*pitch, sqrt(sq(Lens.sr())-sq(i*pitch)), 0 );
       rotateZ(-incidenceAngle[i]);
 
 
       refractions[i].display();
       popMatrix();
     }
-  }
   popMatrix();
+    
+  }
   popMatrix();
   
   popMatrix();  //3D表示終了
