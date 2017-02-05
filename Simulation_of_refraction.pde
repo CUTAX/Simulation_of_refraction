@@ -12,7 +12,7 @@ float d=200;//レンズ直径
 float h=50;//レンズ高さ
 float sr; //レンズのSR
 float[] incidenceAngle; 
-float theta=10;
+float theta=0;
 float phi=0;
 
 int numberOfLight;
@@ -56,20 +56,20 @@ void setup() {
     incidenceAngle[i]=asin(i*pitch/sr);
     refractions[i] = new Refraction(1, 1.49, incidenceAngle[i]);
   }
-  
-    font =loadFont("OCRAExtended-48.vlw");
+
+  font =loadFont("OCRAExtended-48.vlw");
   textFont(font);
 }
 
 void draw() {
-  pushMatrix();
   background(0);
+  pushMatrix();
   //屈折の計算
   for (int i=0; i<refractions.length; i++) {
     refractions[i].calculation();
   }
   //光線中心からのレンズまでの距離を計算
-  psiNum=floor(360/psiPitch)-1;
+  psiNum=floor(360/psiPitch);
 
   Intersection=new IntersectionOfEllipseAndLine[psiNum];
   x1=new float[psiNum];
@@ -85,41 +85,40 @@ void draw() {
     psi=i*psiPitch;
     Intersection[i]=new IntersectionOfEllipseAndLine(
       d/2.0*cos(radians(theta)), d/2.0, 
-      (sr-h)*sin(radians(theta)), 0, 
-      tan(radians(psi)), 0);
+      (sr-h)*sin(radians(theta)), 0.0, 
+      tan(radians(psi)), 0.0);
     Intersection[i].calculation();
     x1[i]=Intersection[i].x1();
     y1[i]=Intersection[i].y1();
     x2[i]=Intersection[i].x2();
     y2[i]=Intersection[i].y2();
 
-    if (psi>=0||psi<180) {  
-      if (y1[i]<0||y2[i]<0) {
-        minDisFromCenter[i]=0.0;
-        maxDisFromCenter[i]=0.0;
-      }
-      if (y1[i]<0||y2[i]>=0) {
+    if ((psi>=0||psi<90)&&(psi>=270||psi<360)) {  
+      if (x1[i]<=0||x2[i]>0) {
         minDisFromCenter[i]=0.0;
         maxDisFromCenter[i]=sqrt(sq(x2[i])+sq(y2[i]));
-      } else {
+      }
+      if (x1[i]>0||x2[i]>0) {
         minDisFromCenter[i]=sqrt(sq(x1[i])+sq(y1[i]));
         maxDisFromCenter[i]=sqrt(sq(x2[i])+sq(y2[i]));
-      }
-    }
-    if (psi>=180||psi<360) {  
-      if (y1[i]>0||y2[i]>0) {
+      } else {
         minDisFromCenter[i]=0.0;
         maxDisFromCenter[i]=0.0;
       }
-      if (y1[i]<0||y2[i]>=0) {
-        minDisFromCenter[i]=0;
-        maxDisFromCenter[i]=sqrt(sq(x1[i])+sq(y1[i]));
-      } else {
+    }
+    if (psi>=90||psi<270) {  
+      if (x1[i]<=0||x2[i]<=0) {
         minDisFromCenter[i]=sqrt(sq(x2[i])+sq(y2[i]));
         maxDisFromCenter[i]=sqrt(sq(x1[i])+sq(y1[i]));
       }
+      if (x1[i]<=0||x2[i]>0) {
+        minDisFromCenter[i]=0;
+        maxDisFromCenter[i]=sqrt(sq(x1[i])+sq(y1[i]));
+      } else {
+        minDisFromCenter[i]=0;
+        maxDisFromCenter[i]=0;
+      }
     }
-
     minNumFromCenter[i]=floor(minDisFromCenter[i]/pitch);
     maxNumFromCenter[i]=floor(maxDisFromCenter[i]/pitch);
   }
@@ -129,7 +128,7 @@ void draw() {
 
   //レンズの描写(半球)
   pushMatrix();
-  fill(0,100,255,50);
+  fill(0, 100, 255, 50);
   //translate(0, 0, -sr+h);
   Hemisphere.display();
   popMatrix();
@@ -142,7 +141,7 @@ void draw() {
 
   for (int j=0; j<psiNum; j++) {
     psi=psiPitch*j;
-  pushMatrix();
+    pushMatrix();
 
     rotateY(radians(psi));
 
@@ -150,32 +149,31 @@ void draw() {
       pushMatrix();
       translate(i*pitch, sqrt(sq(Lens.sr())-sq(i*pitch)), 0 );
       rotateZ(-incidenceAngle[i]);
-
-
       refractions[i].display();
       popMatrix();
     }
-  popMatrix();
-    
+    popMatrix();
   }
   popMatrix();
-  
   popMatrix();  //3D表示終了
-  
+
   /*text drawing*/
-    hint(DISABLE_DEPTH_TEST);
+  pushMatrix();
+  camera(width/2, height/2, 1000, width/2, height/2, 0, 0, 1, 0);
+  hint(DISABLE_DEPTH_TEST);//一番上に表示
   textSize(textSize);
   textAlign(LEFT, TOP);
   fill(255);
   text("psiNum="+nf(psiNum, 2, 0), 0, (textSize+5)*0);
-  //text("cameraEyeY="+nf(cameraEyeY, 3, 1), 0, (textSize+5)*1);
-  //text("cameraEyeZ="+nf(cameraEyeZ, 3, 1), 0, (textSize+5)*2);
+  text("theta="+nf(theta, 3, 0), 0, (textSize+5)*1);
+  text("phi="+nf(phi, 3, 0), 0, (textSize+5)*2);
 
   //text("cameraUpX="+nf(cameraUpX, 1, 2), 0, (textSize+5)*4);
   //text("cameraUpY="+nf(cameraUpY, 1, 2), 0, (textSize+5)*5);
   //text("cameraUpZ="+nf(cameraUpZ, 1, 2), 0, (textSize+5)*6);
-  
+
   //text("scale="+nf(scale, 1, 2), 0, (textSize+5)*8);
-  
+
   hint(ENABLE_DEPTH_TEST);
+  popMatrix();
 }
