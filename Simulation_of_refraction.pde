@@ -5,13 +5,15 @@ Hemisphere Hemisphere;
 Lens Lens;
 Refraction[] refractions;
 XyzVector XyzVector;
-IntersectionOfEllipseAndLine[] Intersection;
+IntersectionOfEllipseAndLine[] IntersectionEAndL;
+IntersectionOfCircleAndEllipse IntersectionCAndE;
 
 float pitch=10;//入射光ピッチ
 float d=200;//レンズ直径
 float h=50;//レンズ高さ
 float sr; //レンズのSR
 float[] incidenceAngle; 
+
 float theta=0;
 float phi=0;
 
@@ -21,16 +23,24 @@ float maxDisFromCenter[];
 int minNumFromCenter[];
 int maxNumFromCenter[];
 
-float psiPitch=30;
+float psiPitch=10;
 float psi;
 int psiNum;
-float x1[], y1[], x2[], y2[];
+float x1[], y1[], x2[], y2[]; //レンズ外郭楕円とレンズ中心線の交点
+
+boolean isRealNumCAndE;
+float x3, y3;//レンズ外郭楕円とレンズSR球との接点(交点)
+float psiContact; 
+
+boolean thetaIsIncrease=false, thetaIsDecrease=false;
+boolean phiIsIncrease=false, phiIsDecrease=false;
 
 PFont font;
 int textSize=20;
 
 void setup() {
-  size(displayWidth, displayHeight, P3D);
+  size(1000, 500, P3D);
+  //size(displayWidth, displayHeight, P3D);
 
   cam = new PeasyCam(this, 200);
   cam.setMinimumDistance(500);
@@ -63,15 +73,42 @@ void setup() {
 
 void draw() {
   background(0);
-  pushMatrix();
-  //屈折の計算
+
+/*theta,phi update*/
+  if (thetaIsDecrease==true) {
+    theta--;
+    if (theta<=0) {
+      theta=0;
+    }
+  }
+  if (thetaIsIncrease==true) {
+    theta++;
+    if (theta>=80) {
+      theta=80;
+    }
+  }
+  if (phiIsDecrease==true) {
+    phi--;
+    if (phi<=0) {
+      phi=360;
+    }
+  }
+  if (phiIsIncrease==true) {
+    phi++;
+    if (phi>=360) {
+      phi=0;
+    }
+  }
+
+
+  /*屈折の計算*/
   for (int i=0; i<refractions.length; i++) {
     refractions[i].calculation();
   }
   //光線中心からのレンズまでの距離を計算
   psiNum=floor(360/psiPitch);
 
-  Intersection=new IntersectionOfEllipseAndLine[psiNum];
+  IntersectionEAndL=new IntersectionOfEllipseAndLine[psiNum];
   x1=new float[psiNum];
   y1=new float[psiNum];
   x2=new float[psiNum];
@@ -83,40 +120,52 @@ void draw() {
 
   for (int i=0; i<psiNum; i++) {
     psi=i*psiPitch;
-    Intersection[i]=new IntersectionOfEllipseAndLine(
+
+    IntersectionEAndL[i]=new IntersectionOfEllipseAndLine(
       d/2.0*cos(radians(theta)), d/2.0, 
       (sr-h)*sin(radians(theta)), 0.0, 
       tan(radians(psi)), 0.0);
-    Intersection[i].calculation();
-    x1[i]=Intersection[i].x1();
-    y1[i]=Intersection[i].y1();
-    x2[i]=Intersection[i].x2();
-    y2[i]=Intersection[i].y2();
+    IntersectionEAndL[i].calculation();
+    x1[i]=IntersectionEAndL[i].x1();
+    y1[i]=IntersectionEAndL[i].y1();
+    x2[i]=IntersectionEAndL[i].x2();
+    y2[i]=IntersectionEAndL[i].y2();
 
-    if ((psi>=0||psi<90)&&(psi>=270||psi<360)) {  
-      if (x1[i]<=0||x2[i]>0) {
+
+    if ((psi>=0&&psi<90)||(psi>=270&&psi<360)) {  
+      if (x1[i]<=0&&x2[i]>0) {
         minDisFromCenter[i]=0.0;
         maxDisFromCenter[i]=sqrt(sq(x2[i])+sq(y2[i]));
-      }
-      if (x1[i]>0||x2[i]>0) {
+      } else if (x1[i]>0&&x2[i]>0) {
         minDisFromCenter[i]=sqrt(sq(x1[i])+sq(y1[i]));
         maxDisFromCenter[i]=sqrt(sq(x2[i])+sq(y2[i]));
       } else {
         minDisFromCenter[i]=0.0;
         maxDisFromCenter[i]=0.0;
       }
-    }
-    if (psi>=90||psi<270) {  
-      if (x1[i]<=0||x2[i]<=0) {
+    } else if (psi>=90&&psi<270) {  
+      if (x1[i]<=0&&x2[i]<=0) {
         minDisFromCenter[i]=sqrt(sq(x2[i])+sq(y2[i]));
         maxDisFromCenter[i]=sqrt(sq(x1[i])+sq(y1[i]));
-      }
-      if (x1[i]<=0||x2[i]>0) {
+      } else if (x1[i]<=0&&x2[i]>0) {
         minDisFromCenter[i]=0;
         maxDisFromCenter[i]=sqrt(sq(x1[i])+sq(y1[i]));
       } else {
         minDisFromCenter[i]=0;
         maxDisFromCenter[i]=0;
+      }
+    }
+
+    IntersectionCAndE=new IntersectionOfCircleAndEllipse(
+      sr, d/2.0*cos(radians(theta)), d/2.0, (sr-h)*sin(radians(theta)));
+    IntersectionCAndE.calculation();
+    isRealNumCAndE=IntersectionCAndE.isRealNumber();
+    if (isRealNumCAndE==true) {
+      x3=IntersectionCAndE.x1();
+      y3=IntersectionCAndE.y1();
+      psiContact=degrees(atan(y3/x3));
+      if (psi<=psiContact||psi>=360-psiContact) {
+        maxDisFromCenter[i]=sr;
       }
     }
     minNumFromCenter[i]=floor(minDisFromCenter[i]/pitch);
@@ -128,7 +177,7 @@ void draw() {
 
   //レンズの描写(半球)
   pushMatrix();
-  fill(0, 100, 255, 50);
+  fill(0, 100, 255);
   //translate(0, 0, -sr+h);
   Hemisphere.display();
   popMatrix();
@@ -136,7 +185,7 @@ void draw() {
   //光線の描写
   pushMatrix();
   rotateX(radians(90));
-  rotateY(radians(0));
+  rotateY(radians(phi));
   rotateZ(radians(theta));
 
   for (int j=0; j<psiNum; j++) {
@@ -145,7 +194,7 @@ void draw() {
 
     rotateY(radians(psi));
 
-    for (int i=minNumFromCenter[j]; i<maxNumFromCenter[j]; i++) {
+    for (int i=minNumFromCenter[j]; i<=maxNumFromCenter[j]; i++) {
       pushMatrix();
       translate(i*pitch, sqrt(sq(Lens.sr())-sq(i*pitch)), 0 );
       rotateZ(-incidenceAngle[i]);
@@ -154,7 +203,6 @@ void draw() {
     }
     popMatrix();
   }
-  popMatrix();
   popMatrix();  //3D表示終了
 
   /*text drawing*/
@@ -165,15 +213,58 @@ void draw() {
   textAlign(LEFT, TOP);
   fill(255);
   text("psiNum="+nf(psiNum, 2, 0), 0, (textSize+5)*0);
-  text("theta="+nf(theta, 3, 0), 0, (textSize+5)*1);
-  text("phi="+nf(phi, 3, 0), 0, (textSize+5)*2);
+  text("theta="+nf(theta, 3, 0)+" deg", 0, (textSize+5)*1);
+  text("phi="+nf(phi, 3, 0)+" deg", 0, (textSize+5)*2);
 
-  //text("cameraUpX="+nf(cameraUpX, 1, 2), 0, (textSize+5)*4);
+  text("minDisFromCenter[0]="+nf(minDisFromCenter[0], 3, 2), 0, (textSize+5)*5);
+  text("maxDisFromCenter[0]="+nf(maxDisFromCenter[0], 3, 2), 0, (textSize+5)*6);
   //text("cameraUpY="+nf(cameraUpY, 1, 2), 0, (textSize+5)*5);
   //text("cameraUpZ="+nf(cameraUpZ, 1, 2), 0, (textSize+5)*6);
 
   //text("scale="+nf(scale, 1, 2), 0, (textSize+5)*8);
-
   hint(ENABLE_DEPTH_TEST);
+  pushMatrix();
+  translate(120, 300);
+  line(-10, 0, 20, 0);
+  line(0, -10, 0, 20);
+  for (int i=0; i<psiNum; i++) {
+    stroke(255, 0, 0);
+    ellipse(x1[i], y1[i], 3, 3);
+    text("i="+i, x1[i], y1[i]);
+    stroke(0, 255, 0);
+    ellipse(x2[i], y2[i], 3, 3);
+    text("i="+i, x2[i], y2[i]);
+  }
   popMatrix();
+  popMatrix();
+}
+
+void keyPressed() {
+  if (keyCode==UP) {
+    thetaIsDecrease=true;
+  }
+  if (keyCode==DOWN) {
+    thetaIsIncrease=true;
+  }
+  if (keyCode==LEFT) {
+    phiIsIncrease=true;
+  }
+  if (keyCode==RIGHT) {
+    phiIsDecrease=true;
+  }
+}
+
+void keyReleased() {
+  if (keyCode==UP) {
+    thetaIsDecrease=false;
+  }
+  if (keyCode==DOWN) {
+    thetaIsIncrease=false;
+  }
+  if (keyCode==LEFT) {
+    phiIsIncrease=false;
+  }
+  if (keyCode==RIGHT) {
+    phiIsDecrease=false;
+  }
 }

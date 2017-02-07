@@ -1,31 +1,29 @@
-//ellipse (x-x0)^2/a^2+(y-y0)^2/b^2=1
+//circle x^2+y^2=r^2
+//r半径
+//ellipse (x-x0)^2/a^2+y^2/b^2=1
 //a=x半径、b=Y半径、(x0、y0)=中心座標
-//line y=cx+d
 
-class IntersectionOfEllipseAndLine {
-  float a, b, c, d, x0, y0;
+class IntersectionOfCircleAndEllipse {
+  float r, a, b, x0;
   float A, B, C, D;
   float x1, y1, x2, y2;
   boolean isRealNumber;
 
   //初期化用メソッド(コンストラクタ)
-  IntersectionOfEllipseAndLine(
+  IntersectionOfCircleAndEllipse(
+    float _r, 
     float _a, float _b, 
-    float _x0, float _y0, 
-    float _c, float _d
-    ) {
+    float _x0) {
+    r= _r;
     a= _a;
     b= _b;
     x0= _x0;
-    y0= _y0;
-    c= _c;
-    d= _d;
   }
 
   void calculation() {
-    A = 1.0/sq(a)+sq(c)/sq(b);
-    B = -2.0*x0/sq(a)+2.0*c*(d-y0)/sq(b);
-    C = sq(x0)/sq(a)+sq(d-y0)/sq(b)-1.0;
+    A = sq(b)-sq(a);
+    B = -2.0*sq(b)*x0;
+    C = sq(b)*sq(x0)+sq(a)*sq(r)-sq(a)*sq(b);
     D=sq(B)-4.0*A*C;
 
     if (D<0) {
@@ -33,9 +31,9 @@ class IntersectionOfEllipseAndLine {
     } else {
       isRealNumber=true;
       x1=(-B-sqrt(D))/(2*A);
-      y1=c*x1+d;
+      y1=sqrt(sq(r)-sq(x1));
       x2=(-B+sqrt(D))/(2*A);
-      y2=c*x2+d;
+      y2=sqrt(sq(r)-sq(x2));
     }
   }
 
@@ -54,13 +52,18 @@ class IntersectionOfEllipseAndLine {
   float y2() {
     return y2;
   }
+  float D() {
+    return D;
+  }
 
   void display() {
     noFill();
-    stroke(255, 0, 0);
-    point(x0, y0);
-    ellipse(x0, y0, 2.0*a, 2.0*b);
-    line(0, 0, 300, 300*c);
+    stroke(255);
+    point(x0, 0);
+    ellipse(0, 0, 2*r, 2*r);
+    ellipse(x0, 0, 2.0*a, 2.0*b);
+    ellipse(x1, y1, 5, 5);
+    ellipse(x2, y2, 5, 5);
     stroke(0);
   }
 }
